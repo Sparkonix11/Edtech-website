@@ -19,6 +19,7 @@ exports.capturePayment = async (req, res) => {
   }
 
   let total_amount = 0
+  let isFree = false
 
   for (const course_id of courses) {
     let course
@@ -43,9 +44,32 @@ exports.capturePayment = async (req, res) => {
 
       // Add the price of the course to the total amount
       total_amount += course.price
+
+      // Check if the course is free (price = 0)
+      if (course.price === 0) {
+        isFree = true
+      }
     } catch (error) {
       console.log(error)
       return res.status(500).json({ success: false, message: error.message })
+    }
+  }
+
+  // If the course is free, directly enroll the student without creating a Razorpay order
+  if (isFree || total_amount === 0) {
+    try {
+      await enrollStudents(courses, userId, res)
+      return res.status(200).json({
+        success: true,
+        message: "Student enrolled successfully in the free course",
+      })
+    } catch (error) {
+      console.log(error)
+      return res.status(500).json({
+        success: false,
+        message: "Failed to enroll in the free course",
+        error: error.message,
+      })
     }
   }
 

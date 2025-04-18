@@ -77,16 +77,21 @@ exports.categoryPageDetails = async (req, res) => {
     const categoriesExceptSelected = await Category.find({
       _id: { $ne: categoryId },
     })
-    let differentCategory = await Category.findOne(
-      categoriesExceptSelected[getRandomInt(categoriesExceptSelected.length)]
-        ._id
-    )
-      .populate({
-        path: "courses",
-        match: { status: "Published" },
-      })
-      .exec()
-    console.log()
+    
+    // Initialize differentCategory with a default value
+    let differentCategory = null;
+    
+    // Only try to find a different category if there are other categories available
+    if (categoriesExceptSelected && categoriesExceptSelected.length > 0) {
+      const randomIndex = getRandomInt(categoriesExceptSelected.length);
+      differentCategory = await Category.findById(categoriesExceptSelected[randomIndex]._id)
+        .populate({
+          path: "courses",
+          match: { status: "Published" },
+        })
+        .exec()
+    }
+    
     // Get top-selling courses across all categories
     const allCategories = await Category.find()
       .populate({
@@ -108,6 +113,7 @@ exports.categoryPageDetails = async (req, res) => {
       },
     })
   } catch (error) {
+    console.error("Error in categoryPageDetails:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

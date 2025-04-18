@@ -38,10 +38,12 @@ export const courseEndpoints = {
   DELETE_SECTION_API: BASE_URL + "/course/deleteSection",
   DELETE_SUBSECTION_API: BASE_URL + "/course/deleteSubSection",
   DELETE_COURSE_API: BASE_URL + "/course/deleteCourse",
+  CREATE_CATEGORY_API: BASE_URL + "/course/createInstructorCategory",
   GET_FULL_COURSE_DETAILS_AUTHENTICATED:
     BASE_URL + "/course/getFullCourseDetails",
   LECTURE_COMPLETION_API: BASE_URL + "/course/updateCourseProgress",
   CREATE_RATING_API: BASE_URL + "/course/createRating",
+  ENROLL_FREE_COURSE_API: BASE_URL + "/course/enrollFreeCourse",
 }
 
 // RATINGS AND REVIEWS

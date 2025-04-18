@@ -17,6 +17,7 @@ import Instructor from "./components/core/Dashboard/Instructor"
 import MyCourses from "./components/core/Dashboard/MyCourses"
 import MyProfile from "./components/core/Dashboard/MyProfile"
 import Settings from "./components/core/Dashboard/Settings"
+import CategoryManagement from "./components/core/Dashboard/CategoryManagement"
 import VideoDetails from "./components/core/ViewCourse/VideoDetails"
 import About from "./pages/About"
 import Catalog from "./pages/Catalog"
@@ -115,6 +116,7 @@ function App() {
               <Route path="dashboard/instructor" element={<Instructor />} />
               <Route path="dashboard/my-courses" element={<MyCourses />} />
               <Route path="dashboard/add-course" element={<AddCourse />} />
+              <Route path="dashboard/category-management" element={<CategoryManagement />} />
               <Route
                 path="dashboard/edit-course/:courseId"
                 element={<EditCourse />}

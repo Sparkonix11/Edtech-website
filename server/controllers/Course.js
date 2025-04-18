@@ -6,6 +6,10 @@ const User = require("../models/User")
 const { uploadImageToCloudinary } = require("../utils/imageUploader")
 const CourseProgress = require("../models/CourseProgress")
 const { convertSecondsToDuration } = require("../utils/secToDuration")
+const mailSender = require("../utils/mailSender")
+const { courseEnrollmentEmail } = require("../mail/templates/courseEnrollmentEmail")
+const mongoose = require("mongoose")
+
 // Function to create a new course
 exports.createCourse = async (req, res) => {
   try {
@@ -487,6 +491,93 @@ exports.deleteCourse = async (req, res) => {
       success: false,
       message: "Server error",
       error: error.message,
+    })
+  }
+}
+
+// Function to enroll a student in a free course
+exports.enrollFreeCourse = async (req, res) => {
+  try {
+    const { courseId } = req.body
+    const userId = req.user.id
+
+    if (!courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid course ID"
+      })
+    }
+
+    // Check if the course exists
+    const course = await Course.findById(courseId)
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found"
+      })
+    }
+
+    // Check if the course is free
+    if (course.price !== 0) {
+      return res.status(403).json({
+        success: false,
+        message: "This is not a free course"
+      })
+    }
+
+    // Check if the user is already enrolled
+    const uid = new mongoose.Types.ObjectId(userId)
+    if (course.studentsEnroled.includes(uid)) {
+      return res.status(400).json({
+        success: false,
+        message: "You are already enrolled in this course"
+      })
+    }
+
+    // Enroll the student in the course
+    course.studentsEnroled.push(userId)
+    await course.save()
+
+    // Create course progress
+    const courseProgress = await CourseProgress.create({
+      courseID: courseId,
+      userId: userId,
+      completedVideos: [],
+    })
+
+    // Add course to student's enrolled courses
+    const enrolledStudent = await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: {
+          courses: courseId,
+          courseProgress: courseProgress._id,
+        },
+      },
+      { new: true }
+    )
+
+    // Send enrollment confirmation email
+    await mailSender(
+      enrolledStudent.email,
+      `Successfully Enrolled in ${course.courseName}`,
+      courseEnrollmentEmail(
+        course.courseName,
+        `${enrolledStudent.firstName} ${enrolledStudent.lastName}`
+      )
+    )
+
+    return res.status(200).json({
+      success: true,
+      message: "Successfully enrolled in the free course",
+      data: course
+    })
+  } catch (error) {
+    console.error("Error enrolling in free course:", error)
+    return res.status(500).json({
+      success: false,
+      message: "Failed to enroll in the course",
+      error: error.message
     })
   }
 }

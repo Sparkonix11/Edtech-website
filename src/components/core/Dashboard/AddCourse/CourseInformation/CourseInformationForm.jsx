@@ -23,6 +23,7 @@ export default function CourseInformationForm() {
     handleSubmit,
     setValue,
     getValues,
+    watch,
     formState: { errors },
   } = useForm()
 
@@ -31,14 +32,22 @@ export default function CourseInformationForm() {
   const { course, editCourse } = useSelector((state) => state.course)
   const [loading, setLoading] = useState(false)
   const [courseCategories, setCourseCategories] = useState([])
+  const isFree = watch("isFree")
 
   useEffect(() => {
     const getCategories = async () => {
       setLoading(true)
-      const categories = await fetchCourseCategories()
-      if (categories.length > 0) {
-        // console.log("categories", categories)
-        setCourseCategories(categories)
+      try {
+        const categories = await fetchCourseCategories()
+        if (categories?.length > 0) {
+          // console.log("categories", categories)
+          setCourseCategories(categories)
+        } else {
+          toast.error("No categories found. Please contact admin.")
+        }
+      } catch (error) {
+        console.log("Error fetching categories:", error)
+        toast.error("Failed to fetch course categories")
       }
       setLoading(false)
     }
@@ -48,16 +57,26 @@ export default function CourseInformationForm() {
       setValue("courseTitle", course.courseName)
       setValue("courseShortDesc", course.courseDescription)
       setValue("coursePrice", course.price)
+      setValue("isFree", course.price === 0)
       setValue("courseTags", course.tag)
       setValue("courseBenefits", course.whatYouWillLearn)
       setValue("courseCategory", course.category)
       setValue("courseRequirements", course.instructions)
       setValue("courseImage", course.thumbnail)
+    } else {
+      setValue("isFree", false)
     }
     getCategories()
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Effect to clear price when isFree changes
+  useEffect(() => {
+    if (isFree) {
+      setValue("coursePrice", 0)
+    }
+  }, [isFree, setValue])
 
   const isFormUpdated = () => {
     const currentValues = getValues()
@@ -139,7 +158,7 @@ export default function CourseInformationForm() {
     const formData = new FormData()
     formData.append("courseName", data.courseTitle)
     formData.append("courseDescription", data.courseShortDesc)
-    formData.append("price", data.coursePrice)
+    formData.append("price", data.isFree ? 0 : data.coursePrice)
     formData.append("tag", JSON.stringify(data.courseTags))
     formData.append("whatYouWillLearn", data.courseBenefits)
     formData.append("category", data.courseCategory)
@@ -194,32 +213,47 @@ export default function CourseInformationForm() {
           </span>
         )}
       </div>
-      {/* Course Price */}
-      <div className="flex flex-col space-y-2">
-        <label className="text-sm text-richblack-5" htmlFor="coursePrice">
-          Course Price <sup className="text-pink-200">*</sup>
+      {/* Free Course Checkbox */}
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="isFree"
+          {...register("isFree")}
+          className="border-gray-300 h-4 w-4 rounded bg-richblack-500 text-richblack-400 focus:ring-2 focus:ring-richblack-5"
+        />
+        <label htmlFor="isFree" className="text-sm text-richblack-5">
+          Make this course free
         </label>
-        <div className="relative">
-          <input
-            id="coursePrice"
-            placeholder="Enter Course Price"
-            {...register("coursePrice", {
-              required: true,
-              valueAsNumber: true,
-              pattern: {
-                value: /^(0|[1-9]\d*)(\.\d+)?$/,
-              },
-            })}
-            className="form-style w-full !pl-12"
-          />
-          <HiOutlineCurrencyRupee className="absolute left-3 top-1/2 inline-block -translate-y-1/2 text-2xl text-richblack-400" />
-        </div>
-        {errors.coursePrice && (
-          <span className="ml-2 text-xs tracking-wide text-pink-200">
-            Course Price is required
-          </span>
-        )}
       </div>
+      {/* Course Price */}
+      {!isFree && (
+        <div className="flex flex-col space-y-2">
+          <label className="text-sm text-richblack-5" htmlFor="coursePrice">
+            Course Price <sup className="text-pink-200">*</sup>
+          </label>
+          <div className="relative">
+            <input
+              id="coursePrice"
+              placeholder="Enter Course Price"
+              {...register("coursePrice", {
+                required: !isFree,
+                valueAsNumber: true,
+                pattern: {
+                  value: /^(0|[1-9]\d*)(\.\d+)?$/,
+                },
+              })}
+              className="form-style w-full !pl-12"
+              disabled={isFree}
+            />
+            <HiOutlineCurrencyRupee className="absolute left-3 top-1/2 inline-block -translate-y-1/2 text-2xl text-richblack-400" />
+          </div>
+          {errors.coursePrice && !isFree && (
+            <span className="ml-2 text-xs tracking-wide text-pink-200">
+              Course Price is required
+            </span>
+          )}
+        </div>
+      )}
       {/* Course Category */}
       <div className="flex flex-col space-y-2">
         <label className="text-sm text-richblack-5" htmlFor="courseCategory">

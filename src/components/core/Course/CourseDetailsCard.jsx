@@ -28,6 +28,8 @@ function CourseDetailsCard({ course, setConfirmationModal, handleBuyCourse }) {
     _id: courseId,
   } = course
 
+  const isFree = CurrentPrice === 0
+
   const handleShare = () => {
     copy(window.location.href)
     toast.success("Link copied to clipboard")
@@ -68,7 +70,7 @@ function CourseDetailsCard({ course, setConfirmationModal, handleBuyCourse }) {
 
         <div className="px-4">
           <div className="space-x-3 pb-4 text-3xl font-semibold">
-            Rs. {CurrentPrice}
+            {isFree ? "Free" : `Rs. ${CurrentPrice}`}
           </div>
           <div className="flex flex-col gap-4">
             <button
@@ -81,18 +83,22 @@ function CourseDetailsCard({ course, setConfirmationModal, handleBuyCourse }) {
             >
               {user && course?.studentsEnroled.includes(user?._id)
                 ? "Go To Course"
+                : isFree
+                ? "Enroll for Free"
                 : "Buy Now"}
             </button>
-            {(!user || !course?.studentsEnroled.includes(user?._id)) && (
+            {!isFree && (!user || !course?.studentsEnroled.includes(user?._id)) && (
               <button onClick={handleAddToCart} className="blackButton">
                 Add to Cart
               </button>
             )}
           </div>
           <div>
-            <p className="pb-3 pt-6 text-center text-sm text-richblack-25">
-              30-Day Money-Back Guarantee
-            </p>
+            {!isFree && (
+              <p className="pb-3 pt-6 text-center text-sm text-richblack-25">
+                30-Day Money-Back Guarantee
+              </p>
+            )}
           </div>
 
           <div className={``}>

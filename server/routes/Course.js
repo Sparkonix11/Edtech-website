@@ -13,6 +13,7 @@ const {
   editCourse,
   getInstructorCourses,
   deleteCourse,
+  enrollFreeCourse,
 } = require("../controllers/Course")
 
 // Tags Controllers Import
@@ -85,6 +86,8 @@ router.post("/updateCourseProgress", auth, isStudent, updateCourseProgress)
 // router.post("/getProgressPercentage", auth, isStudent, getProgressPercentage)
 // Delete a Course
 router.delete("/deleteCourse", deleteCourse)
+// Enroll in a free course
+router.post("/enrollFreeCourse", auth, isStudent, enrollFreeCourse)
 
 // ********************************************************************************************************
 //                                      Category routes (Only by Admin)
@@ -92,6 +95,8 @@ router.delete("/deleteCourse", deleteCourse)
 // Category can Only be Created by Admin
 // TODO: Put IsAdmin Middleware here
 router.post("/createCategory", auth, isAdmin, createCategory)
+// Allow instructors to suggest new categories
+router.post("/createInstructorCategory", auth, isInstructor, createCategory)
 router.get("/showAllCategories", showAllCategories)
 router.post("/getCategoryPageDetails", categoryPageDetails)
 

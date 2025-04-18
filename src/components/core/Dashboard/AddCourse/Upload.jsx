@@ -47,6 +47,13 @@ export default function Upload({
     }
   }
 
+  // Add manual click handler for input reference
+  const handleClick = () => {
+    if (inputRef.current) {
+      inputRef.current.click()
+    }
+  }
+
   useEffect(() => {
     register(name, { required: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,6 +73,7 @@ export default function Upload({
         className={`${
           isDragActive ? "bg-richblack-600" : "bg-richblack-700"
         } flex min-h-[250px] cursor-pointer items-center justify-center rounded-md border-2 border-dotted border-richblack-500`}
+        onClick={previewSource ? undefined : handleClick}
       >
         {previewSource ? (
           <div className="flex w-full flex-col p-6">
